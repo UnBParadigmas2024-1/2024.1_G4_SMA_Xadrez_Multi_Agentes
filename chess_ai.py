@@ -19,7 +19,7 @@ class ChessAI:
             raise Exception("Sistema operacional não suportado")
 
     def get_move(self, board):
-        result = self.engine.play(board, chess.engine.Limit(time=2.0))
+        result = self.engine.play(board, chess.engine.Limit(time=0.7))
         return result.move
 
     def close(self):
