@@ -10,6 +10,7 @@ class GameController:
         self.ai_agent = ai_agent
         self.selected_square = None
         self.game_active = True
+        self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
 
     def get_square_from_mouse(self, pos):
         """Converte a posição do mouse em um quadrado do tabuleiro de xadrez."""
@@ -20,7 +21,7 @@ class GameController:
     def draw_turn_indicator(self, screen):
         """Desenha um indicador para mostrar de quem é a vez de jogar na área do placar."""
         font = pygame.font.SysFont(None, 36)
-        if self.board.turn == chess.WHITE:
+        if self.ai_turn:
             turn_text = "Vez da IA"
         else:
             turn_text = "Sua vez"
@@ -73,13 +74,7 @@ class GameController:
                         clicked_square = self.get_square_from_mouse(pos)
                         print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
 
-                        if self.board.turn == chess.WHITE:
-                            # IA joga como branco
-                            print("IA está jogando.")
-                            move = self.ai_agent.get_move(self.board)
-                            print(f"Movimento da IA: {move}")
-                            self.board.push(move)
-                        else:
+                        if not self.ai_turn:
                             # Jogador humano joga
                             piece = self.board.piece_at(clicked_square)
                             if self.selected_square is None:
@@ -91,16 +86,18 @@ class GameController:
                                     self.board.push(move)
                                     self.selected_square = None
                                     print(f"Movimento realizado: {move}")
+                                    self.ai_turn = True  # Após o movimento do jogador, é a vez da IA
                                 else:
                                     print("Movimento inválido.")
                                     self.selected_square = None
 
             # A IA deve jogar no turno dela
-            if self.board.turn == chess.WHITE:
+            if self.ai_turn and not self.board.is_game_over():
                 print("IA está jogando automaticamente.")
                 move = self.ai_agent.get_move(self.board)
                 print(f"Movimento da IA: {move}")
                 self.board.push(move)
+                self.ai_turn = False  # Após o movimento da IA, é a vez do jogador
 
             clock.tick(60)
 
@@ -112,6 +109,7 @@ class GameController:
         self.board = chess.Board()
         self.selected_square = None
         self.game_active = True
+        self.ai_turn = False  # Jogador começa com as peças brancas
         print("Jogo resetado!")
 
     def close(self):
