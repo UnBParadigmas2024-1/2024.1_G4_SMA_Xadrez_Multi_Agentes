@@ -2,12 +2,20 @@ import pygame
 import chess
 
 def draw_board(screen):
-    """Desenha o tabuleiro de xadrez."""
+    """Desenha o tabuleiro de xadrez e as coordenadas."""
     colors = [pygame.Color("white"), pygame.Color("gray")]
+    font = pygame.font.SysFont(None, 18)  # Fonte menor para o texto das coordenadas
+
     for r in range(8):
         for c in range(8):
             color = colors[(r + c) % 2]
             pygame.draw.rect(screen, color, pygame.Rect(c*100, r*100, 100, 100))
+            
+            # Desenhe as coordenadas no canto inferior direito de cada quadrado
+            coord_text = f"{chr(65 + c)}{8 - r}"  # Calcula a coordenada (ex: A1, B1, etc.)
+            text_surface = font.render(coord_text, True, pygame.Color("black"))
+            text_rect = text_surface.get_rect(bottomright=(c*100 + 95, r*100 + 95))
+            screen.blit(text_surface, text_rect)
 
 def draw_pieces(screen, board):
     """Desenha as peças no tabuleiro."""
@@ -26,7 +34,7 @@ def draw_pieces(screen, board):
         "k": pygame.image.load("images/bk.png")
     }
 
-    piece_size = 75  # 25% menor que 100 (tamanho original do quadrado)
+    piece_size = 60  # 25% menor que 100 (tamanho original do quadrado)
     margin = 12.5    # Margem para centralizar a peça dentro do quadrado
 
     for square in chess.SQUARES:
@@ -38,3 +46,4 @@ def draw_pieces(screen, board):
             x = col * 100 + margin
             y = (7 - row) * 100 + margin
             screen.blit(piece_image, pygame.Rect(x, y, piece_size, piece_size))
+
