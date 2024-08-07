@@ -12,13 +12,15 @@ class GameController:
         self.game_active = True
         self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
 
-    def get_square_from_mouse(self, pos):
+    def get_square_from_mouse(self, pos, start_x, start_y):
         """Converte a posição do mouse em um quadrado do tabuleiro de xadrez."""
         x, y = pos
-        row, col = y // 100, x // 100
-        return chess.square(col, 7 - row)
+        if start_x <= x < start_x + 800 and start_y <= y < start_y + 800:
+            row, col = (y - start_y) // 100, (x - start_x) // 100
+            return chess.square(col, 7 - row)
+        return None
 
-    def draw_turn_indicator(self, screen):
+    def draw_turn_indicator(self, screen, start_x, start_y):
         """Desenha um indicador para mostrar de quem é a vez de jogar na área do placar."""
         font = pygame.font.SysFont(None, 36)
         if self.ai_turn:
@@ -26,40 +28,65 @@ class GameController:
         else:
             turn_text = "Sua vez"
         turn_surface = font.render(turn_text, True, pygame.Color("black"))
-        screen.blit(turn_surface, (810, 10))  # Ajuste a posição conforme necessário
+        screen.blit(turn_surface, (start_x + 810, start_y + 10))  # Ajuste a posição conforme necessário
 
-    def draw_scoreboard(self, screen):
+    def draw_scoreboard(self, screen, start_x, start_y):
         """Desenha o placar ao lado do tabuleiro."""
-        pygame.draw.rect(screen, pygame.Color("lightgrey"), pygame.Rect(800, 0, 200, 800))  # Área do placar
+        board_width = 800  # Largura do tabuleiro
+        scoreboard_width = 200
+        scoreboard_height = 800  # Altura do placar (igual à altura do tabuleiro)
+
+        # Calcula a posição do placar
+        scoreboard_x = start_x + board_width
+        scoreboard_y = start_y
+
+        # Desenha a área do placar
+        pygame.draw.rect(screen, pygame.Color("lightgrey"), pygame.Rect(scoreboard_x, scoreboard_y, scoreboard_width, scoreboard_height))
 
         font = pygame.font.SysFont(None, 36)
+
         # Botão de Reset
-        reset_button_rect = pygame.Rect(810, 50, 180, 50)
+        reset_button_width = 180
+        reset_button_height = 50
+        reset_button_x = scoreboard_x + (scoreboard_width - reset_button_width) // 2
+        reset_button_y = start_y + 50
+        reset_button_rect = pygame.Rect(reset_button_x, reset_button_y, reset_button_width, reset_button_height)
+        
         pygame.draw.rect(screen, pygame.Color("blue"), reset_button_rect)
         reset_text = font.render("Resetar Jogo", True, pygame.Color("white"))
-        screen.blit(reset_text, (825, 60))
+        text_rect = reset_text.get_rect(center=reset_button_rect.center)
+        screen.blit(reset_text, text_rect)
 
         return reset_button_rect
 
-    def draw_selected_square(self, screen):
+    def draw_selected_square(self, screen, start_x, start_y):
         """Desenha uma borda preta ao redor do quadrado selecionado."""
         if self.selected_square is not None:
             row, col = divmod(self.selected_square, 8)
-            pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(col * 100, (7 - row) * 100, 100, 100), 5)
+            pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(start_x + col * 100, start_y + (7 - row) * 100, 100, 100), 5)
+
+    def calculate_board_start_position(self, screen_width, screen_height):
+        board_size = 800  # Tamanho fixo do tabuleiro (8x8 quadrados de 100 pixels cada)
+        start_x = (screen_width - board_size - 200) // 2  # Subtrai a largura do placar
+        start_y = (screen_height - board_size) // 2
+        return start_x, start_y
 
     def play_game(self):
         pygame.init()
-        screen = pygame.display.set_mode((1000, 800))
+        screen = pygame.display.set_mode((1000, 800), pygame.RESIZABLE)
         pygame.display.set_caption("Xadrez com SMA")
         clock = pygame.time.Clock()
 
         while not self.board.is_game_over() and self.game_active:
+            screen_width, screen_height = screen.get_size()
+            start_x, start_y = self.calculate_board_start_position(screen_width, screen_height)
+
             screen.fill(pygame.Color("white"))
-            chess_logic.draw_board(screen)
-            chess_logic.draw_pieces(screen, self.board)
-            reset_button_rect = self.draw_scoreboard(screen)
-            self.draw_turn_indicator(screen)
-            self.draw_selected_square(screen)
+            chess_logic.draw_board(screen, start_x, start_y)
+            chess_logic.draw_pieces(screen, self.board, start_x, start_y)
+            reset_button_rect = self.draw_scoreboard(screen, start_x, start_y)
+            self.draw_turn_indicator(screen, start_x, start_y)
+            self.draw_selected_square(screen, start_x, start_y)
             pygame.display.flip()
 
             for event in pygame.event.get():
@@ -71,8 +98,9 @@ class GameController:
                     if reset_button_rect.collidepoint(pos):
                         self.reset_game()
                     else:
-                        clicked_square = self.get_square_from_mouse(pos)
-                        print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
+                        clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
+                        if clicked_square is not None:
+                            print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
 
                         if not self.ai_turn:
                             # Jogador humano joga
@@ -90,6 +118,10 @@ class GameController:
                                 else:
                                     print("Movimento inválido.")
                                     self.selected_square = None
+
+                if event.type == pygame.VIDEORESIZE:
+                    width, height = event.w, event.h
+                    screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
             # A IA deve jogar no turno dela
             if self.ai_turn and not self.board.is_game_over():

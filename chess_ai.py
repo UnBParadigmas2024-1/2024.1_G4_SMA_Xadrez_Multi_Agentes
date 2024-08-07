@@ -14,7 +14,7 @@ class ChessAI:
         elif os.uname().sysname == 'Darwin':
             return "./stockfish_mac/stockfish-macos-x86-64"
         elif system == 'posix':
-            return "./stockfish_ubuntu/stockfish-ubuntu-x86-64"
+            return "stockfish_ubuntu/stockfish-ubuntu-x86-64-avx2"
         else:
             raise Exception("Sistema operacional não suportado")
 
