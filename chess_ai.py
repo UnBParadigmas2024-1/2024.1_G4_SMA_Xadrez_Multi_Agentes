@@ -17,9 +17,21 @@ class ChessAI:
             return "stockfish_ubuntu/stockfish-ubuntu-x86-64-avx2"
         else:
             raise Exception("Sistema operacional não suportado")
+    
+
+    def set_difficulty(self, difficulty):
+        self.difficulty = difficulty
 
     def get_move(self, board):
-        result = self.engine.play(board, chess.engine.Limit(time=0.7))
+        time_limit = 0.7  # Tempo padrão para a IA
+        if self.difficulty == 'easy':
+            time_limit = 0.1  # Menor tempo para decisões mais fáceis
+        elif self.difficulty == 'medium':
+            time_limit = 0.7  # Tempo médio (padrão)
+        elif self.difficulty == 'hard':
+            time_limit = 2.0  # Maior tempo para decisões mais difíceis
+        
+        result = self.engine.play(board, chess.engine.Limit(time=time_limit))
         return result.move
 
     def close(self):

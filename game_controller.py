@@ -11,6 +11,63 @@ class GameController:
         self.selected_square = None
         self.game_active = True
         self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
+        self.difficulty = 'medium'  # Dificuldade padrão
+    
+    def display_difficulty_menu(self, screen):
+        """Exibe um menu para o jogador escolher a dificuldade."""
+        screen.fill(pygame.Color("white"))
+        font = pygame.font.SysFont(None, 60)
+        difficulties = ['Easy', 'Medium', 'Hard']
+        buttons = []
+
+        for i, diff in enumerate(difficulties):
+            text = font.render(diff, True, pygame.Color("black"))
+            text_rect = text.get_rect(center=(screen.get_width() // 2, 200 + i * 100))
+            button_rect = pygame.Rect(
+                text_rect.left - 20, text_rect.top - 10, text_rect.width + 40, text_rect.height + 20
+            )
+            pygame.draw.rect(screen, pygame.Color("lightblue"), button_rect)
+            pygame.draw.rect(screen, pygame.Color("blue"), button_rect, 2)  # Outline
+            screen.blit(text, text_rect)
+            buttons.append((button_rect, diff))
+
+        pygame.display.flip()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    for button_rect, diff in buttons:
+                        if button_rect.collidepoint(pos):
+                            self.difficulty = diff.lower()
+                            return
+
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_1:
+                        self.difficulty = 'easy'
+                        return
+                    elif event.key == pygame.K_2:
+                        self.difficulty = 'medium'
+                        return
+                    elif event.key == pygame.K_3:
+                        self.difficulty = 'hard'
+                        return
+
+    def set_difficulty(self, difficulty):
+        """Ajusta a dificuldade da IA."""
+        if difficulty == 'easy':
+            self.time_limit = 0.1  # Menor tempo para movimentos mais fáceis
+        elif difficulty == 'medium':
+            self.time_limit = 0.7  # Tempo padrão
+        elif difficulty == 'hard':
+            self.time_limit = 2.0  # Mais tempo para movimentos mais difíceis
+        else:
+            raise ValueError("Nível de dificuldade desconhecido")
+        
+
 
     def get_square_from_mouse(self, pos, start_x, start_y):
         """Converte a posição do mouse em um quadrado do tabuleiro de xadrez."""
@@ -57,7 +114,16 @@ class GameController:
         text_rect = reset_text.get_rect(center=reset_button_rect.center)
         screen.blit(reset_text, text_rect)
 
-        return reset_button_rect
+        # Botão de Alterar Dificuldade
+        change_difficulty_button_y = reset_button_y + 70  # Adjust as needed
+        change_difficulty_button_rect = pygame.Rect(reset_button_x, change_difficulty_button_y, reset_button_width, reset_button_height)
+        
+        pygame.draw.rect(screen, pygame.Color("blue"), change_difficulty_button_rect)
+        change_difficulty_text = font.render("Alterar Dificuldade", True, pygame.Color("white"))
+        change_difficulty_text_rect = change_difficulty_text.get_rect(center=change_difficulty_button_rect.center)
+        screen.blit(change_difficulty_text, change_difficulty_text_rect)
+
+        return reset_button_rect, change_difficulty_button_rect
 
     def draw_selected_square(self, screen, start_x, start_y):
         """Desenha uma borda preta ao redor do quadrado selecionado."""
@@ -77,6 +143,10 @@ class GameController:
         pygame.display.set_caption("Xadrez com SMA")
         clock = pygame.time.Clock()
 
+        self.display_difficulty_menu(screen)
+        self.ai_agent.set_difficulty(self.difficulty)
+        self.game_active = True
+
         while not self.board.is_game_over() and self.game_active:
             screen_width, screen_height = screen.get_size()
             start_x, start_y = self.calculate_board_start_position(screen_width, screen_height)
@@ -84,7 +154,7 @@ class GameController:
             screen.fill(pygame.Color("white"))
             chess_logic.draw_board(screen, start_x, start_y)
             chess_logic.draw_pieces(screen, self.board, start_x, start_y)
-            reset_button_rect = self.draw_scoreboard(screen, start_x, start_y)
+            reset_button_rect,change_difficulty_button_rect = self.draw_scoreboard(screen, start_x, start_y)
             self.draw_turn_indicator(screen, start_x, start_y)
             self.draw_selected_square(screen, start_x, start_y)
             pygame.display.flip()
@@ -97,6 +167,10 @@ class GameController:
                     pos = pygame.mouse.get_pos()
                     if reset_button_rect.collidepoint(pos):
                         self.reset_game()
+                    elif change_difficulty_button_rect.collidepoint(pos):
+                        # Voltar para a tela de seleção de dificuldade
+                        self.display_difficulty_menu(screen)
+                        self.ai_agent.set_difficulty(self.difficulty)
                     else:
                         clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
                         if clicked_square is not None:
@@ -146,3 +220,4 @@ class GameController:
 
     def close(self):
         self.ai_agent.close()
+        self.engine.quit()
