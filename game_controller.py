@@ -131,11 +131,12 @@ class GameController:
             row, col = divmod(self.selected_square, 8)
             pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(start_x + col * 100, start_y + (7 - row) * 100, 100, 100), 5)
 
+
     def calculate_board_start_position(self, screen_width, screen_height):
-        board_size = 800  # Tamanho fixo do tabuleiro (8x8 quadrados de 100 pixels cada)
+        board_size = min(screen_width - 200, screen_height)  # Ajuste o tamanho do tabuleiro com base na menor dimensão disponível
         start_x = (screen_width - board_size - 200) // 2  # Subtrai a largura do placar
         start_y = (screen_height - board_size) // 2
-        return start_x, start_y
+        return start_x, start_y, board_size
 
     def play_game(self):
         pygame.init()
@@ -149,12 +150,14 @@ class GameController:
 
         while not self.board.is_game_over() and self.game_active:
             screen_width, screen_height = screen.get_size()
-            start_x, start_y = self.calculate_board_start_position(screen_width, screen_height)
+
+           
+            start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
 
             screen.fill(pygame.Color("white"))
             chess_logic.draw_board(screen, start_x, start_y)
             chess_logic.draw_pieces(screen, self.board, start_x, start_y)
-            reset_button_rect,change_difficulty_button_rect = self.draw_scoreboard(screen, start_x, start_y)
+            reset_button_rect, change_difficulty_button_rect = self.draw_scoreboard(screen, start_x, start_y)
             self.draw_turn_indicator(screen, start_x, start_y)
             self.draw_selected_square(screen, start_x, start_y)
             pygame.display.flip()
