@@ -20,7 +20,8 @@ class ChessAgent(Agent):
         if not self.board.is_game_over() and self.board.turn == self.color:
             move = self.ai_agent.get_move(self.board)
             self.board.push(move)
-            print(f"Agente {self.unique_id} ({'Branco' if self.color else 'Preto'}) moveu: {move}")
+            print(f"Jogador Agente {self.unique_id} ({'Branco' if self.color else 'Preto'}) moveu: {move}")
+            self.model.controller.ai_turn = False
 
 class ChessModel(Model):
     """Modelo que gerencia os agentes de xadrez."""
@@ -42,23 +43,23 @@ class RandomPieceAI(chess_ai.ChessAI):
         return random_move
 
 class GameController:
-    def __init__(self, white_ai, black_ai):
+    def __init__(self, white_ai, black_ai, player_color=chess.WHITE):
         self.board = chess.Board()
         self.white_ai = white_ai
         self.black_ai = black_ai
+        self.player_color = player_color  # Define a cor que o jogador controla
         self.selected_square = None
         self.game_active = True
-        self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
-        self.difficulty = 'medium'  # Dificuldade padrão
-        self.ai_vs_ai_mode = False  # Controle do modo IA vs IA
+        self.ai_turn = self.player_color == chess.BLACK  # Define o turno inicial
+        self.difficulty = 'medium'
+        self.ai_vs_ai_mode = False  # Inicialmente, o modo IA vs IA está desativado
         
-        # Timers: 5 minutos para cada jogador (300 segundos)
         self.player_timer = 300
         self.ai_timer = 300
         self.last_update_time = time.time()
 
-        # Configuração do modelo do Mesa
         self.model = ChessModel(white_ai=self.white_ai, black_ai=self.black_ai, board=self.board)
+        self.model.controller = self  # Passa a referência do controlador para o modelo
 
     def display_difficulty_menu(self, screen):
         """Exibe um menu simples para o jogador escolher a dificuldade."""
@@ -248,56 +249,54 @@ class GameController:
             self.draw_selected_square(screen, start_x, start_y)
             pygame.display.flip()
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    pos = pygame.mouse.get_pos()
-                    if reset_button_rect.collidepoint(pos):
-                        self.reset_game()
-                    elif change_difficulty_button_rect.collidepoint(pos):
-                        self.display_difficulty_menu(screen)
-                        self.white_ai.set_difficulty(self.difficulty)
-                        self.black_ai.set_difficulty(self.difficulty)
-                    elif undo_button_rect.collidepoint(pos):
-                        self.undo_move()
-                    elif ia_vs_ia_button_rect.collidepoint(pos):
-                        self.ai_vs_ai_mode = not self.ai_vs_ai_mode
-                        print(f"Modo IA vs IA {'ativado' if self.ai_vs_ai_mode else 'desativado'}")
-                    else:
-                        clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
-                        if clicked_square is not None:
-                            print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
+            if not self.ai_vs_ai_mode:  # Controle do jogador apenas se não estiver no modo IA vs IA
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        pos = pygame.mouse.get_pos()
+                        if reset_button_rect.collidepoint(pos):
+                            self.reset_game()
+                        elif change_difficulty_button_rect.collidepoint(pos):
+                            self.display_difficulty_menu(screen)
+                            self.white_ai.set_difficulty(self.difficulty)
+                            self.black_ai.set_difficulty(self.difficulty)
+                        elif undo_button_rect.collidepoint(pos):
+                            self.undo_move()
+                        elif ia_vs_ia_button_rect.collidepoint(pos):
+                            self.ai_vs_ai_mode = not self.ai_vs_ai_mode
+                            print(f"Modo IA vs IA {'ativado' if self.ai_vs_ai_mode else 'desativado'}")
+                        else:
+                            clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
+                            if clicked_square is not None:
+                                print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
 
-                        if not self.ai_turn and not self.ai_vs_ai_mode:
-                            piece = self.board.piece_at(clicked_square)
-                            if self.selected_square is None:
-                                if piece and piece.color == self.board.turn:
-                                    self.selected_square = clicked_square
-                            else:
-                                move = chess.Move(self.selected_square, clicked_square)
-                                if move in self.board.legal_moves:
-                                    self.board.push(move)
-                                    self.selected_square = None
-                                    print(f"Movimento realizado: {move}")
-                                    self.ai_turn = True
+                            if not self.ai_turn and not self.ai_vs_ai_mode:
+                                piece = self.board.piece_at(clicked_square)
+                                if self.selected_square is None:
+                                    if piece and piece.color == self.board.turn == self.player_color:
+                                        self.selected_square = clicked_square
                                 else:
-                                    print("Movimento inválido.")
-                                    self.selected_square = None
+                                    move = chess.Move(self.selected_square, clicked_square)
+                                    if move in self.board.legal_moves:
+                                        self.board.push(move)
+                                        self.selected_square = None
+                                        print(f"Movimento realizado: {move}")
+                                        self.ai_turn = True
+                                    else:
+                                        print("Movimento inválido.")
+                                        self.selected_square = None
 
-                if event.type == pygame.VIDEORESIZE:
-                    width, height = event.w, event.h
-                    screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                    if event.type == pygame.VIDEORESIZE:
+                        width, height = event.w, event.h
+                        screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-            # Usando o modelo do Mesa para a IA
-            if (self.ai_turn or self.ai_vs_ai_mode) and not self.board.is_game_over() and self.game_active:
+            if self.ai_vs_ai_mode or (self.ai_turn and self.board.turn != self.player_color):
                 self.model.step()  # Executa o próximo passo no modelo do Mesa
                 
                 if not self.ai_vs_ai_mode:
                     self.ai_turn = False
-                else:
-                    self.ai_turn = not self.ai_turn
 
             clock.tick(60)
 
@@ -309,7 +308,7 @@ class GameController:
         self.board = chess.Board()
         self.selected_square = None
         self.game_active = True
-        self.ai_turn = False
+        self.ai_turn = self.player_color == chess.BLACK
         self.player_timer = 300
         self.ai_timer = 300
         self.last_update_time = time.time()
