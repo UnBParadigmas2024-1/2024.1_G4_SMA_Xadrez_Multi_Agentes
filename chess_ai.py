@@ -1,6 +1,7 @@
 import chess
 import chess.engine
 import os
+import random
 
 class ChessAI:
     def __init__(self):
@@ -30,6 +31,21 @@ class ChessAI:
             time_limit = 0.7  # Tempo médio (padrão)
         elif self.difficulty == 'hard':
             time_limit = 2.0  # Maior tempo para decisões mais difíceis
+
+        legal_moves = list(board.legal_moves)
+
+        if self.difficulty == 'easy':
+            # Add randomness: 50% chance to make a random legal move
+            if random.random() < 0.5:
+                return random.choice(legal_moves)
+        if self.difficulty == 'medium':
+            # Add randomness: 30% chance to make a random legal move
+            if random.random() < 0.3:
+                return random.choice(legal_moves)
+        if self.difficulty == 'hard':
+            # Add randomness: 20% chance to make a random legal move
+            if random.random() < 0.2:
+                return random.choice(legal_moves)
         
         result = self.engine.play(board, chess.engine.Limit(time=time_limit))
         return result.move

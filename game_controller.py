@@ -3,6 +3,14 @@ import chess_logic
 import chess_ai
 import pygame
 import sys
+import random
+
+class RandomPieceAI(chess_ai.ChessAI):
+
+    def get_move(self, board):
+        legal_moves = list(board.legal_moves)
+        random_move = random.choice(legal_moves)  # Choose a random move from the legal ones
+        return random_move
 
 class GameController:
     def __init__(self, ai_agent):
@@ -208,11 +216,22 @@ class GameController:
 
             # A IA deve jogar no turno dela
             if self.ai_turn and not self.board.is_game_over():
-                print("IA está jogando automaticamente.")
-                move = self.ai_agent.get_move(self.board)
-                print(f"Movimento da IA: {move}")
+                # Condition: if any piece is on the 6th rank (row 3 for white or row 5 for black)
+                some_condition = any(
+                    self.board.piece_at(square) and chess.square_rank(square) in [2, 4]
+                    for square in chess.SQUARES
+                )
+
+                if some_condition:
+                    ai_agent = RandomPieceAI()  # Use the random behavior AI
+                else:
+                    ai_agent = self.ai_agent  # Use the regular AI
+
+                move = ai_agent.get_move(self.board)
+                print(f"AI move: {move}")
                 self.board.push(move)
-                self.ai_turn = False  # Após o movimento da IA, é a vez do jogador
+                self.ai_turn = False  # After the AI move, it's the player's turn
+
 
             clock.tick(60)
 
@@ -261,3 +280,7 @@ class GameController:
         self.ai_agent.close()
         pygame.quit()
         sys.exit()
+
+
+
+
