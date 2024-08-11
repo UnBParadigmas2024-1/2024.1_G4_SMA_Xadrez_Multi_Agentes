@@ -66,8 +66,6 @@ class GameController:
             self.time_limit = 2.0  # Mais tempo para movimentos mais difíceis
         else:
             raise ValueError("Nível de dificuldade desconhecido")
-        
-
 
     def get_square_from_mouse(self, pos, start_x, start_y):
         """Converte a posição do mouse em um quadrado do tabuleiro de xadrez."""
@@ -123,14 +121,23 @@ class GameController:
         change_difficulty_text_rect = change_difficulty_text.get_rect(center=change_difficulty_button_rect.center)
         screen.blit(change_difficulty_text, change_difficulty_text_rect)
 
-        return reset_button_rect, change_difficulty_button_rect
+        # Botão de Desfazer Movimento
+        undo_button_y = change_difficulty_button_y + 70  # Ajuste conforme necessário
+        undo_button_rect = pygame.Rect(reset_button_x, undo_button_y, reset_button_width, reset_button_height)
+
+        pygame.draw.rect(screen, pygame.Color("blue"), undo_button_rect)
+        undo_text = font.render("Desfazer Movimento", True, pygame.Color("white"))
+        undo_text_rect = undo_text.get_rect(center=undo_button_rect.center)
+        screen.blit(undo_text, undo_text_rect)
+
+        # Retornar todos os retângulos de botão para verificações de clique
+        return reset_button_rect, change_difficulty_button_rect, undo_button_rect
 
     def draw_selected_square(self, screen, start_x, start_y):
         """Desenha uma borda preta ao redor do quadrado selecionado."""
         if self.selected_square is not None:
             row, col = divmod(self.selected_square, 8)
             pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(start_x + col * 100, start_y + (7 - row) * 100, 100, 100), 5)
-
 
     def calculate_board_start_position(self, screen_width, screen_height):
         board_size = min(screen_width - 200, screen_height)  # Ajuste o tamanho do tabuleiro com base na menor dimensão disponível
@@ -150,14 +157,12 @@ class GameController:
 
         while not self.board.is_game_over() and self.game_active:
             screen_width, screen_height = screen.get_size()
-
-           
             start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
 
             screen.fill(pygame.Color("white"))
             chess_logic.draw_board(screen, start_x, start_y)
             chess_logic.draw_pieces(screen, self.board, start_x, start_y)
-            reset_button_rect, change_difficulty_button_rect = self.draw_scoreboard(screen, start_x, start_y)
+            reset_button_rect, change_difficulty_button_rect, undo_button_rect = self.draw_scoreboard(screen, start_x, start_y)
             self.draw_turn_indicator(screen, start_x, start_y)
             self.draw_selected_square(screen, start_x, start_y)
             pygame.display.flip()
@@ -171,9 +176,10 @@ class GameController:
                     if reset_button_rect.collidepoint(pos):
                         self.reset_game()
                     elif change_difficulty_button_rect.collidepoint(pos):
-                        # Voltar para a tela de seleção de dificuldade
                         self.display_difficulty_menu(screen)
                         self.ai_agent.set_difficulty(self.difficulty)
+                    elif undo_button_rect.collidepoint(pos):
+                        self.undo_move()  # Chama a função de desfazer movimento
                     else:
                         clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
                         if clicked_square is not None:
@@ -221,6 +227,37 @@ class GameController:
         self.ai_turn = False  # Jogador começa com as peças brancas
         print("Jogo resetado!")
 
+    def undo_move(self):
+        """Desfaz os últimos dois movimentos realizados (jogador e IA)."""
+        moves_to_undo = 2  # Desfaz dois movimentos
+
+        while moves_to_undo > 0 and len(self.board.move_stack) > 0:
+            self.board.pop()  # Desfaz um movimento
+            moves_to_undo -= 1
+
+        # Atualiza o turno do jogador para que ele possa jogar novamente
+        self.ai_turn = False
+
+        if moves_to_undo == 0:
+            print("Dois movimentos desfeitos!")
+        else:
+            print("Não há movimentos suficientes para desfazer.")
+
+        # Atualiza o tabuleiro na tela
+        screen_width, screen_height = pygame.display.get_surface().get_size()
+        start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
+
+        screen = pygame.display.get_surface()
+        screen.fill(pygame.Color("white"))
+        chess_logic.draw_board(screen, start_x, start_y)
+        chess_logic.draw_pieces(screen, self.board, start_x, start_y)
+        self.draw_scoreboard(screen, start_x, start_y)
+        self.draw_turn_indicator(screen, start_x, start_y)
+        self.draw_selected_square(screen, start_x, start_y)
+        pygame.display.flip()
+
+
     def close(self):
         self.ai_agent.close()
-        self.engine.quit()
+        pygame.quit()
+        sys.exit()
