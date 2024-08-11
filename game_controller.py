@@ -9,7 +9,7 @@ class RandomPieceAI(chess_ai.ChessAI):
 
     def get_move(self, board):
         legal_moves = list(board.legal_moves)
-        random_move = random.choice(legal_moves)  # Choose a random move from the legal ones
+        random_move = random.choice(legal_moves)
         return random_move
 
 class GameController:
@@ -20,6 +20,7 @@ class GameController:
         self.game_active = True
         self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
         self.difficulty = 'medium'  # Dificuldade padrão
+        self.ai_vs_ai_mode = False  # Controle do modo IA vs IA
     
     def display_difficulty_menu(self, screen):
         """Exibe um menu para o jogador escolher a dificuldade."""
@@ -35,7 +36,7 @@ class GameController:
                 text_rect.left - 20, text_rect.top - 10, text_rect.width + 40, text_rect.height + 20
             )
             pygame.draw.rect(screen, pygame.Color("lightblue"), button_rect)
-            pygame.draw.rect(screen, pygame.Color("blue"), button_rect, 2)  # Outline
+            pygame.draw.rect(screen, pygame.Color("blue"), button_rect, 2)
             screen.blit(text, text_rect)
             buttons.append((button_rect, diff))
 
@@ -67,11 +68,11 @@ class GameController:
     def set_difficulty(self, difficulty):
         """Ajusta a dificuldade da IA."""
         if difficulty == 'easy':
-            self.time_limit = 0.1  # Menor tempo para movimentos mais fáceis
+            self.time_limit = 0.1
         elif difficulty == 'medium':
-            self.time_limit = 0.7  # Tempo padrão
+            self.time_limit = 0.7
         elif difficulty == 'hard':
-            self.time_limit = 2.0  # Mais tempo para movimentos mais difíceis
+            self.time_limit = 2.0
         else:
             raise ValueError("Nível de dificuldade desconhecido")
 
@@ -91,24 +92,21 @@ class GameController:
         else:
             turn_text = "Sua vez"
         turn_surface = font.render(turn_text, True, pygame.Color("black"))
-        screen.blit(turn_surface, (start_x + 810, start_y + 10))  # Ajuste a posição conforme necessário
+        screen.blit(turn_surface, (start_x + 810, start_y + 10))
 
     def draw_scoreboard(self, screen, start_x, start_y):
         """Desenha o placar ao lado do tabuleiro."""
-        board_width = 800  # Largura do tabuleiro
+        board_width = 800
         scoreboard_width = 200
-        scoreboard_height = 800  # Altura do placar (igual à altura do tabuleiro)
+        scoreboard_height = 800
 
-        # Calcula a posição do placar
         scoreboard_x = start_x + board_width
         scoreboard_y = start_y
 
-        # Desenha a área do placar
         pygame.draw.rect(screen, pygame.Color("lightgrey"), pygame.Rect(scoreboard_x, scoreboard_y, scoreboard_width, scoreboard_height))
 
         font = pygame.font.SysFont(None, 36)
 
-        # Botão de Reset
         reset_button_width = 180
         reset_button_height = 50
         reset_button_x = scoreboard_x + (scoreboard_width - reset_button_width) // 2
@@ -120,8 +118,7 @@ class GameController:
         text_rect = reset_text.get_rect(center=reset_button_rect.center)
         screen.blit(reset_text, text_rect)
 
-        # Botão de Alterar Dificuldade
-        change_difficulty_button_y = reset_button_y + 70  # Adjust as needed
+        change_difficulty_button_y = reset_button_y + 70
         change_difficulty_button_rect = pygame.Rect(reset_button_x, change_difficulty_button_y, reset_button_width, reset_button_height)
         
         pygame.draw.rect(screen, pygame.Color("blue"), change_difficulty_button_rect)
@@ -129,8 +126,7 @@ class GameController:
         change_difficulty_text_rect = change_difficulty_text.get_rect(center=change_difficulty_button_rect.center)
         screen.blit(change_difficulty_text, change_difficulty_text_rect)
 
-        # Botão de Desfazer Movimento
-        undo_button_y = change_difficulty_button_y + 70  # Ajuste conforme necessário
+        undo_button_y = change_difficulty_button_y + 70
         undo_button_rect = pygame.Rect(reset_button_x, undo_button_y, reset_button_width, reset_button_height)
 
         pygame.draw.rect(screen, pygame.Color("blue"), undo_button_rect)
@@ -138,8 +134,15 @@ class GameController:
         undo_text_rect = undo_text.get_rect(center=undo_button_rect.center)
         screen.blit(undo_text, undo_text_rect)
 
-        # Retornar todos os retângulos de botão para verificações de clique
-        return reset_button_rect, change_difficulty_button_rect, undo_button_rect
+        ia_vs_ia_button_y = undo_button_y + 70
+        ia_vs_ia_button_rect = pygame.Rect(reset_button_x, ia_vs_ia_button_y, reset_button_width, reset_button_height)
+
+        pygame.draw.rect(screen, pygame.Color("blue"), ia_vs_ia_button_rect)
+        ia_vs_ia_text = font.render("Modo IA vs IA", True, pygame.Color("white"))
+        ia_vs_ia_text_rect = ia_vs_ia_text.get_rect(center=ia_vs_ia_button_rect.center)
+        screen.blit(ia_vs_ia_text, ia_vs_ia_text_rect)
+
+        return reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ia_button_rect
 
     def draw_selected_square(self, screen, start_x, start_y):
         """Desenha uma borda preta ao redor do quadrado selecionado."""
@@ -148,8 +151,8 @@ class GameController:
             pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(start_x + col * 100, start_y + (7 - row) * 100, 100, 100), 5)
 
     def calculate_board_start_position(self, screen_width, screen_height):
-        board_size = min(screen_width - 200, screen_height)  # Ajuste o tamanho do tabuleiro com base na menor dimensão disponível
-        start_x = (screen_width - board_size - 200) // 2  # Subtrai a largura do placar
+        board_size = min(screen_width - 200, screen_height)
+        start_x = (screen_width - board_size - 200) // 2
         start_y = (screen_height - board_size) // 2
         return start_x, start_y, board_size
 
@@ -170,7 +173,7 @@ class GameController:
             screen.fill(pygame.Color("white"))
             chess_logic.draw_board(screen, start_x, start_y)
             chess_logic.draw_pieces(screen, self.board, start_x, start_y)
-            reset_button_rect, change_difficulty_button_rect, undo_button_rect = self.draw_scoreboard(screen, start_x, start_y)
+            reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ia_button_rect = self.draw_scoreboard(screen, start_x, start_y)
             self.draw_turn_indicator(screen, start_x, start_y)
             self.draw_selected_square(screen, start_x, start_y)
             pygame.display.flip()
@@ -187,14 +190,16 @@ class GameController:
                         self.display_difficulty_menu(screen)
                         self.ai_agent.set_difficulty(self.difficulty)
                     elif undo_button_rect.collidepoint(pos):
-                        self.undo_move()  # Chama a função de desfazer movimento
+                        self.undo_move()
+                    elif ia_vs_ia_button_rect.collidepoint(pos):
+                        self.ai_vs_ai_mode = not self.ai_vs_ai_mode
+                        print(f"Modo IA vs IA {'ativado' if self.ai_vs_ai_mode else 'desativado'}")
                     else:
                         clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
                         if clicked_square is not None:
                             print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
 
-                        if not self.ai_turn:
-                            # Jogador humano joga
+                        if not self.ai_turn and not self.ai_vs_ai_mode:
                             piece = self.board.piece_at(clicked_square)
                             if self.selected_square is None:
                                 if piece and piece.color == self.board.turn:
@@ -205,7 +210,7 @@ class GameController:
                                     self.board.push(move)
                                     self.selected_square = None
                                     print(f"Movimento realizado: {move}")
-                                    self.ai_turn = True  # Após o movimento do jogador, é a vez da IA
+                                    self.ai_turn = True
                                 else:
                                     print("Movimento inválido.")
                                     self.selected_square = None
@@ -214,24 +219,16 @@ class GameController:
                     width, height = event.w, event.h
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-            # A IA deve jogar no turno dela
-            if self.ai_turn and not self.board.is_game_over():
-                # Condition: if any piece is on the 6th rank (row 3 for white or row 5 for black)
-                some_condition = any(
-                    self.board.piece_at(square) and chess.square_rank(square) in [2, 4]
-                    for square in chess.SQUARES
-                )
-
-                if some_condition:
-                    ai_agent = RandomPieceAI()  # Use the random behavior AI
-                else:
-                    ai_agent = self.ai_agent  # Use the regular AI
-
+            if (self.ai_turn or self.ai_vs_ai_mode) and not self.board.is_game_over():
+                ai_agent = self.ai_agent
                 move = ai_agent.get_move(self.board)
-                print(f"AI move: {move}")
+                print(f"Movimento da IA: {move}")
                 self.board.push(move)
-                self.ai_turn = False  # After the AI move, it's the player's turn
-
+                
+                if not self.ai_vs_ai_mode:
+                    self.ai_turn = False
+                else:
+                    self.ai_turn = not self.ai_turn
 
             clock.tick(60)
 
@@ -243,18 +240,17 @@ class GameController:
         self.board = chess.Board()
         self.selected_square = None
         self.game_active = True
-        self.ai_turn = False  # Jogador começa com as peças brancas
+        self.ai_turn = False
         print("Jogo resetado!")
 
     def undo_move(self):
         """Desfaz os últimos dois movimentos realizados (jogador e IA)."""
-        moves_to_undo = 2  # Desfaz dois movimentos
+        moves_to_undo = 2
 
         while moves_to_undo > 0 and len(self.board.move_stack) > 0:
-            self.board.pop()  # Desfaz um movimento
+            self.board.pop()
             moves_to_undo -= 1
 
-        # Atualiza o turno do jogador para que ele possa jogar novamente
         self.ai_turn = False
 
         if moves_to_undo == 0:
@@ -262,7 +258,6 @@ class GameController:
         else:
             print("Não há movimentos suficientes para desfazer.")
 
-        # Atualiza o tabuleiro na tela
         screen_width, screen_height = pygame.display.get_surface().get_size()
         start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
 
@@ -275,12 +270,7 @@ class GameController:
         self.draw_selected_square(screen, start_x, start_y)
         pygame.display.flip()
 
-
     def close(self):
         self.ai_agent.close()
         pygame.quit()
         sys.exit()
-
-
-
-
