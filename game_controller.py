@@ -4,6 +4,7 @@ import chess_ai
 import pygame
 import sys
 import random
+import time
 
 class RandomPieceAI(chess_ai.ChessAI):
 
@@ -21,7 +22,12 @@ class GameController:
         self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
         self.difficulty = 'medium'  # Dificuldade padrão
         self.ai_vs_ai_mode = False  # Controle do modo IA vs IA
-    
+        
+        # Timers: 5 minutos para cada jogador (300 segundos)
+        self.player_timer = 300
+        self.ai_timer = 300
+        self.last_update_time = time.time()
+
     def display_difficulty_menu(self, screen):
         """Exibe um menu para o jogador escolher a dificuldade."""
         screen.fill(pygame.Color("white"))
@@ -134,7 +140,7 @@ class GameController:
         undo_text_rect = undo_text.get_rect(center=undo_button_rect.center)
         screen.blit(undo_text, undo_text_rect)
 
-        ia_vs_ia_button_y = undo_button_y + 70
+        ia_vs_ia_button_y = undo_button_y + 90  # Aumenta o espaçamento para 90 pixels
         ia_vs_ia_button_rect = pygame.Rect(reset_button_x, ia_vs_ia_button_y, reset_button_width, reset_button_height)
 
         pygame.draw.rect(screen, pygame.Color("blue"), ia_vs_ia_button_rect)
@@ -142,7 +148,14 @@ class GameController:
         ia_vs_ia_text_rect = ia_vs_ia_text.get_rect(center=ia_vs_ia_button_rect.center)
         screen.blit(ia_vs_ia_text, ia_vs_ia_text_rect)
 
+        # Desenhar os timers
+        player_timer_text = font.render(f"Jogador: {self.format_time(self.player_timer)}", True, pygame.Color("black"))
+        ai_timer_text = font.render(f"IA: {self.format_time(self.ai_timer)}", True, pygame.Color("black"))
+        screen.blit(player_timer_text, (scoreboard_x + 10, start_y + 550))
+        screen.blit(ai_timer_text, (scoreboard_x + 10, start_y + 500))
+
         return reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ia_button_rect
+
 
     def draw_selected_square(self, screen, start_x, start_y):
         """Desenha uma borda preta ao redor do quadrado selecionado."""
@@ -155,6 +168,29 @@ class GameController:
         start_x = (screen_width - board_size - 200) // 2
         start_y = (screen_height - board_size) // 2
         return start_x, start_y, board_size
+
+    def update_timers(self):
+        """Atualiza os timers de acordo com o tempo decorrido."""
+        current_time = time.time()
+        elapsed_time = current_time - self.last_update_time
+        self.last_update_time = current_time
+
+        if self.ai_turn:
+            self.ai_timer -= elapsed_time
+            if self.ai_timer <= 0:
+                print("Tempo da IA acabou. Jogador vence!")
+                self.game_active = False
+        else:
+            self.player_timer -= elapsed_time
+            if self.player_timer <= 0:
+                print("Tempo do jogador acabou. IA vence!")
+                self.game_active = False
+
+    def format_time(self, seconds):
+        """Formata o tempo em minutos e segundos."""
+        minutes = int(seconds) // 60
+        seconds = int(seconds) % 60
+        return f"{minutes:02}:{seconds:02}"
 
     def play_game(self):
         pygame.init()
@@ -169,6 +205,8 @@ class GameController:
         while not self.board.is_game_over() and self.game_active:
             screen_width, screen_height = screen.get_size()
             start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
+
+            self.update_timers()
 
             screen.fill(pygame.Color("white"))
             chess_logic.draw_board(screen, start_x, start_y)
@@ -219,7 +257,7 @@ class GameController:
                     width, height = event.w, event.h
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-            if (self.ai_turn or self.ai_vs_ai_mode) and not self.board.is_game_over():
+            if (self.ai_turn or self.ai_vs_ai_mode) and not self.board.is_game_over() and self.game_active:
                 ai_agent = self.ai_agent
                 move = ai_agent.get_move(self.board)
                 print(f"Movimento da IA: {move}")
@@ -241,6 +279,9 @@ class GameController:
         self.selected_square = None
         self.game_active = True
         self.ai_turn = False
+        self.player_timer = 300
+        self.ai_timer = 300
+        self.last_update_time = time.time()
         print("Jogo resetado!")
 
     def undo_move(self):
