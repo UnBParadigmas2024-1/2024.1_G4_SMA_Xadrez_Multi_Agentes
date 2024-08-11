@@ -5,9 +5,34 @@ import pygame
 import sys
 import random
 import time
+from mesa import Agent, Model
+from mesa.time import RandomActivation
+
+class ChessAgent(Agent):
+    """Agente que realiza movimentos no jogo de xadrez."""
+    def __init__(self, unique_id, model, ai_agent, board):
+        super().__init__(unique_id, model)
+        self.ai_agent = ai_agent
+        self.board = board
+
+    def step(self):
+        if not self.board.is_game_over():
+            move = self.ai_agent.get_move(self.board)
+            self.board.push(move)
+            print(f"Agente {self.unique_id} moveu: {move}")
+
+class ChessModel(Model):
+    """Modelo que gerencia os agentes de xadrez."""
+    def __init__(self, ai_agent, board):
+        self.schedule = RandomActivation(self)
+        self.board = board
+        agent = ChessAgent(1, self, ai_agent, self.board)
+        self.schedule.add(agent)
+
+    def step(self):
+        self.schedule.step()
 
 class RandomPieceAI(chess_ai.ChessAI):
-
     def get_move(self, board):
         legal_moves = list(board.legal_moves)
         random_move = random.choice(legal_moves)
@@ -27,6 +52,9 @@ class GameController:
         self.player_timer = 300
         self.ai_timer = 300
         self.last_update_time = time.time()
+
+        # Configuração do modelo do Mesa
+        self.model = ChessModel(ai_agent=self.ai_agent, board=self.board)
 
     def display_difficulty_menu(self, screen):
         """Exibe um menu para o jogador escolher a dificuldade."""
@@ -257,11 +285,9 @@ class GameController:
                     width, height = event.w, event.h
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
+            # Usando o modelo do Mesa para a IA
             if (self.ai_turn or self.ai_vs_ai_mode) and not self.board.is_game_over() and self.game_active:
-                ai_agent = self.ai_agent
-                move = ai_agent.get_move(self.board)
-                print(f"Movimento da IA: {move}")
-                self.board.push(move)
+                self.model.step()  # Executa o próximo passo no modelo do Mesa
                 
                 if not self.ai_vs_ai_mode:
                     self.ai_turn = False
