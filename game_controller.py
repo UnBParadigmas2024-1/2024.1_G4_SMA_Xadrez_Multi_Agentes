@@ -10,24 +10,27 @@ from mesa.time import RandomActivation
 
 class ChessAgent(Agent):
     """Agente que realiza movimentos no jogo de xadrez."""
-    def __init__(self, unique_id, model, ai_agent, board):
+    def __init__(self, unique_id, model, ai_agent, board, color):
         super().__init__(unique_id, model)
         self.ai_agent = ai_agent
         self.board = board
+        self.color = color
 
     def step(self):
-        if not self.board.is_game_over():
+        if not self.board.is_game_over() and self.board.turn == self.color:
             move = self.ai_agent.get_move(self.board)
             self.board.push(move)
-            print(f"Agente {self.unique_id} moveu: {move}")
+            print(f"Agente {self.unique_id} ({'Branco' if self.color else 'Preto'}) moveu: {move}")
 
 class ChessModel(Model):
     """Modelo que gerencia os agentes de xadrez."""
-    def __init__(self, ai_agent, board):
+    def __init__(self, white_ai, black_ai, board):
         self.schedule = RandomActivation(self)
         self.board = board
-        agent = ChessAgent(1, self, ai_agent, self.board)
-        self.schedule.add(agent)
+        white_agent = ChessAgent(1, self, white_ai, self.board, chess.WHITE)
+        black_agent = ChessAgent(2, self, black_ai, self.board, chess.BLACK)
+        self.schedule.add(white_agent)
+        self.schedule.add(black_agent)
 
     def step(self):
         self.schedule.step()
@@ -39,9 +42,10 @@ class RandomPieceAI(chess_ai.ChessAI):
         return random_move
 
 class GameController:
-    def __init__(self, ai_agent):
+    def __init__(self, white_ai, black_ai):
         self.board = chess.Board()
-        self.ai_agent = ai_agent
+        self.white_ai = white_ai
+        self.black_ai = black_ai
         self.selected_square = None
         self.game_active = True
         self.ai_turn = False  # Inicialmente, é a vez do jogador (brancas)
@@ -54,10 +58,10 @@ class GameController:
         self.last_update_time = time.time()
 
         # Configuração do modelo do Mesa
-        self.model = ChessModel(ai_agent=self.ai_agent, board=self.board)
+        self.model = ChessModel(white_ai=self.white_ai, black_ai=self.black_ai, board=self.board)
 
     def display_difficulty_menu(self, screen):
-        """Exibe um menu para o jogador escolher a dificuldade."""
+        """Exibe um menu simples para o jogador escolher a dificuldade."""
         screen.fill(pygame.Color("white"))
         font = pygame.font.SysFont(None, 60)
         difficulties = ['Easy', 'Medium', 'Hard']
@@ -184,7 +188,6 @@ class GameController:
 
         return reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ia_button_rect
 
-
     def draw_selected_square(self, screen, start_x, start_y):
         """Desenha uma borda preta ao redor do quadrado selecionado."""
         if self.selected_square is not None:
@@ -227,7 +230,8 @@ class GameController:
         clock = pygame.time.Clock()
 
         self.display_difficulty_menu(screen)
-        self.ai_agent.set_difficulty(self.difficulty)
+        self.white_ai.set_difficulty(self.difficulty)
+        self.black_ai.set_difficulty(self.difficulty)
         self.game_active = True
 
         while not self.board.is_game_over() and self.game_active:
@@ -254,7 +258,8 @@ class GameController:
                         self.reset_game()
                     elif change_difficulty_button_rect.collidepoint(pos):
                         self.display_difficulty_menu(screen)
-                        self.ai_agent.set_difficulty(self.difficulty)
+                        self.white_ai.set_difficulty(self.difficulty)
+                        self.black_ai.set_difficulty(self.difficulty)
                     elif undo_button_rect.collidepoint(pos):
                         self.undo_move()
                     elif ia_vs_ia_button_rect.collidepoint(pos):
@@ -338,6 +343,7 @@ class GameController:
         pygame.display.flip()
 
     def close(self):
-        self.ai_agent.close()
+        self.white_ai.close()
+        self.black_ai.close()
         pygame.quit()
         sys.exit()

@@ -2,8 +2,9 @@ import chess_ai
 import game_controller
 
 def main():
-    ai_agent = chess_ai.ChessAI()
-    controller = game_controller.GameController(ai_agent)
+    white_ai = chess_ai.ChessAI()
+    black_ai = chess_ai.ChessAI()
+    controller = game_controller.GameController(white_ai, black_ai)
     controller.play_game()
     controller.close()
 
