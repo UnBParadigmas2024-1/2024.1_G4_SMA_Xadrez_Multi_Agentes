@@ -66,7 +66,7 @@ Apresente, brevemente, como cada membro do grupo contribuiu para o projeto.
 | Ana Beatriz |	Criação dos handles	| Excelente |
 | Delziron Braz	| base De IA otimizações e refatorações |	Excelente |
 | Gabriel Ferreira da Silva | Pesquisa sobre controle e game design de tabuleiro|	Excelente |
-| Guilherme Nishimura  | Pesquisa de projeto , documentação  e refatoração no game criação do tabuleiro base  | Execelente |
+| Guilherme Nishimura  | Pesquisa de projeto , documentação  e refatoração no game criação do tabuleiro base com a base de ia | Execelente |
 | Helder Lourenço |	Criação da documentação, atualização dos multi agentes | Excelente |
 | Hugo  |  Pesquisa de projetos,criação do tabuleiro base | Excelente |	Excelente |
 | Pablo  |  Funções de menu e de janelas bem como logica multi agentes | Execelente |
