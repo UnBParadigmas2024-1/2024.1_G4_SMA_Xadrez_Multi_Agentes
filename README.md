@@ -34,7 +34,7 @@ Tabuleiro de Xadrez
 **Tecnologias**: Mesa<br>
 
 Requisitos para execução sendo:
-- [Python](https://www.python.org/downloads/): versão 3.10 ou maior
+- [Python](https://www.python.org/downloads/): versão 3.10 ou maior<br>
 pacote de instalador basico do python [PIP](https://pip.pypa.io/en/stable/getting-started/), 22.0.2 ou maior
 
 [Link do Documento de Instalação do PIP Python para OS](https://pip.pypa.io/en/stable/installation/)
