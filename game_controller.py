@@ -38,13 +38,14 @@ class GameController:
         while not self.board.is_game_over() and self.game_active:
             screen_width, screen_height = screen.get_size()
             start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
+            square_size = board_size // 8  
 
             screen.fill(pygame.Color("white"))
-            chess_logic.draw_board(screen, start_x, start_y)
-            chess_logic.draw_pieces(screen, self.board, start_x, start_y)
+            chess_logic.draw_board(screen, start_x, start_y, square_size)
+            chess_logic.draw_pieces(screen, self.board, start_x, start_y, square_size)
             reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ai_button_rect = self.draw_scoreboard(screen, start_x, start_y)
             self.draw_turn_indicator(screen, start_x, start_y)
-            self.draw_selected_square(screen, start_x, start_y)
+            self.draw_selected_square(screen, start_x, start_y, square_size)
             pygame.display.flip()
 
             self.update_timers()
@@ -52,7 +53,7 @@ class GameController:
             if self.ai_vs_ai_mode:
                 self.handle_ai_vs_ai_mode(clock)
             else:
-                self.handle_player_vs_ai_mode(screen, reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ai_button_rect, start_x, start_y)
+                self.handle_player_vs_ai_mode(screen, reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ai_button_rect, start_x, start_y, square_size)
 
             clock.tick(60)
 
@@ -68,7 +69,8 @@ class GameController:
                 print("IA Preta está fazendo o movimento...")
                 self.make_ai_move(self.black_ai)
             
-            clock.tick(1)  
+            clock.tick(1)
+
     def make_ai_move(self, ai_agent):
         move = ai_agent.get_move(self.board)
         if move is not None:
@@ -77,7 +79,7 @@ class GameController:
         else:
             print("Nenhum movimento possível pela IA.")
 
-    def handle_player_vs_ai_mode(self, screen, reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ai_button_rect, start_x, start_y):
+    def handle_player_vs_ai_mode(self, screen, reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ai_button_rect, start_x, start_y, square_size):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -96,7 +98,7 @@ class GameController:
                     self.ai_vs_ai_mode = not self.ai_vs_ai_mode
                     print(f"Modo IA vs IA {'ativado' if self.ai_vs_ai_mode else 'desativado'}")
                 else:
-                    clicked_square = self.get_square_from_mouse(pos, start_x, start_y)
+                    clicked_square = self.get_square_from_mouse(pos, start_x, start_y, square_size)
                     if clicked_square is not None:
                         print(f"Clicou na posição: {pos}, quadrado: {clicked_square}")
 
@@ -119,6 +121,9 @@ class GameController:
             if event.type == pygame.VIDEORESIZE:
                 width, height = event.w, event.h
                 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                screen_width, screen_height = screen.get_size()
+                start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
+                square_size = board_size // 8  
 
         if self.ai_turn and self.board.turn != self.player_color:
             print("IA fazendo seu movimento...")
@@ -155,14 +160,15 @@ class GameController:
 
         screen_width, screen_height = pygame.display.get_surface().get_size()
         start_x, start_y, board_size = self.calculate_board_start_position(screen_width, screen_height)
+        square_size = board_size // 8
 
         screen = pygame.display.get_surface()
         screen.fill(pygame.Color("white"))
-        chess_logic.draw_board(screen, start_x, start_y)
-        chess_logic.draw_pieces(screen, self.board, start_x, start_y)
+        chess_logic.draw_board(screen, start_x, start_y, square_size)
+        chess_logic.draw_pieces(screen, self.board, start_x, start_y, square_size)
         self.draw_scoreboard(screen, start_x, start_y)
         self.draw_turn_indicator(screen, start_x, start_y)
-        self.draw_selected_square(screen, start_x, start_y)
+        self.draw_selected_square(screen, start_x, start_y, square_size)
         pygame.display.flip()
 
     def display_difficulty_menu(self, screen):
@@ -219,10 +225,10 @@ class GameController:
         else:
             raise ValueError("Nível de dificuldade desconhecido")
 
-    def get_square_from_mouse(self, pos, start_x, start_y):
+    def get_square_from_mouse(self, pos, start_x, start_y, square_size):
         x, y = pos
-        if start_x <= x < start_x + 800 and start_y <= y < start_y + 800:
-            row, col = (y - start_y) // 100, (x - start_x) // 100
+        if start_x <= x < start_x + 8 * square_size and start_y <= y < start_y + 8 * square_size:
+            row, col = (y - start_y) // square_size, (x - start_x) // square_size
             return chess.square(col, 7 - row)
         return None
 
@@ -246,6 +252,7 @@ class GameController:
         pygame.draw.rect(screen, pygame.Color("lightgrey"), pygame.Rect(scoreboard_x, scoreboard_y, scoreboard_width, scoreboard_height))
 
         font = pygame.font.SysFont(None, 36)
+        font_tiny = pygame.font.SysFont(None, 24)
 
         reset_button_width = 180
         reset_button_height = 50
@@ -262,7 +269,7 @@ class GameController:
         change_difficulty_button_rect = pygame.Rect(reset_button_x, change_difficulty_button_y, reset_button_width, reset_button_height)
         
         pygame.draw.rect(screen, pygame.Color("blue"), change_difficulty_button_rect)
-        change_difficulty_text = font.render("Alterar Dificuldade", True, pygame.Color("white"))
+        change_difficulty_text = font_tiny.render("Alterar Dificuldade", True, pygame.Color("white"))
         change_difficulty_text_rect = change_difficulty_text.get_rect(center=change_difficulty_button_rect.center)
         screen.blit(change_difficulty_text, change_difficulty_text_rect)
 
@@ -270,7 +277,7 @@ class GameController:
         undo_button_rect = pygame.Rect(reset_button_x, undo_button_y, reset_button_width, reset_button_height)
 
         pygame.draw.rect(screen, pygame.Color("blue"), undo_button_rect)
-        undo_text = font.render("Desfazer Movimento", True, pygame.Color("white"))
+        undo_text = font_tiny.render("Desfazer Movimento", True, pygame.Color("white"))
         undo_text_rect = undo_text.get_rect(center=undo_button_rect.center)
         screen.blit(undo_text, undo_text_rect)
 
@@ -289,15 +296,36 @@ class GameController:
 
         return reset_button_rect, change_difficulty_button_rect, undo_button_rect, ia_vs_ai_button_rect
 
-    def draw_selected_square(self, screen, start_x, start_y):
+    def draw_selected_square(self, screen, start_x, start_y, square_size):
         if self.selected_square is not None:
             row, col = divmod(self.selected_square, 8)
-            pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(start_x + col * 100, start_y + (7 - row) * 100, 100, 100), 5)
+            pygame.draw.rect(screen, pygame.Color("black"), pygame.Rect(start_x + col * square_size, start_y + (7 - row) * square_size, square_size, square_size), 5)
 
     def calculate_board_start_position(self, screen_width, screen_height):
-        board_size = min(screen_width - 200, screen_height)
-        start_x = (screen_width - board_size - 200) // 2
-        start_y = (screen_height - board_size) // 2
+        available_width = screen_width - 100  
+        available_height = screen_height - 100 
+        
+        if screen_width > 1000 and screen_width < 1400 and screen_height > 800:
+            available_width = screen_width  
+            available_height = screen_height
+        elif screen_width > 1366 and screen_height > 800:
+            available_width = screen_width  
+            available_height = screen_height - 250
+        
+        board_size = min(available_width, available_height)
+
+        
+        if board_size > available_height:
+            board_size = available_height
+        
+        start_x = (screen_width - board_size - 200) // 2 - 40 
+        start_y = (screen_height - board_size) // 2 - 50 
+        
+        if screen_width > 1000 or screen_height > 800:
+            board_size = min(available_width, available_height)
+            start_x = (screen_width - board_size - 200) // 2
+            start_y = (screen_height - board_size) // 2
+        
         return start_x, start_y, board_size
 
     def update_timers(self):
