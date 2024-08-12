@@ -80,7 +80,7 @@ TEMPO: +/- 15min
 ## Participações
 |Nome do Membro | Contribuição | Significância da Contribuição para o Projeto (Excelente/Boa/Regular/Ruim/Nula) |
 | -- | -- | -- |
-| Ana Beatriz | Criação dos handles | Excelente |
+| Ana Beatriz | Implementação um comportamento aleatório para as peças controladas por agentes no tabuleiro, além de adicionar um contador de tempo. | Excelente |
 | Delziron Braz | base De IA otimizações e refatorações |   Excelente |
 | Gabriel Ferreira da Silva | Pesquisa sobre controle, Multi-agentes e game design de tabuleiro|   Excelente |
 | Guilherme Nishimura  |Pesquisa de projeto , documentação e refatoração no game criação do tabuleiro base com a base de ia  | Execelente |
