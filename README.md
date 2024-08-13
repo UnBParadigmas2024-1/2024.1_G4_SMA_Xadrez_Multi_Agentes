@@ -59,6 +59,17 @@ As versões para outros pacotes ou bibliotecas requeridas, estão no requirement
 #### 2- instale os requisitos
 ```pip install -r requirements.txt```
 
+baixe os 3 executaveis do seguinte drive e coloque nas respectivas pastas: 
+
+https://drive.google.com/drive/folders/1ucx0iJ9iBaP9qTkSzPczDg5uA9TuIHFG?usp=sharing
+
+![Modo de Dificuldade](./images/arquivos.png)
+
+ou também é possivel baixar por meio do repositorio oficial:
+
+https://github.com/official-stockfish/Stockfish/releases/tag/sf_16.1
+
+
 ## Uso 
 Como usar o projeto.
 
@@ -68,14 +79,7 @@ Para executar o projeto
 Após isso devera abrir uma janela de pop up para prosseguimento de definição de dificuldade e modo de jogo sendo IA vs IA ou IA vs player.
 
 ## Vídeo
-Adicione 1 ou mais vídeos com a execução do projeto.
-Procure: 
-(i) Introduzir o projeto;
-(ii) Mostrar passo a passo o código, explicando-o, e deixando claro o que é de terceiros, e o que é contribuição real da equipe;
-(iii) Apresentar particularidades do Paradigma, da Linguagem, e das Tecnologias, e
-(iV) Apresentar lições aprendidas, contribuições, pendências, e ideias para trabalhos futuros.
-OBS: TODOS DEVEM PARTICIPAR, CONFERINDO PONTOS DE VISTA.
-TEMPO: +/- 15min
+Os videos podem ser encontrados na raiz do projeto pela pasta videos
 
 ## Participações
 |Nome do Membro | Contribuição | Significância da Contribuição para o Projeto (Excelente/Boa/Regular/Ruim/Nula) |
