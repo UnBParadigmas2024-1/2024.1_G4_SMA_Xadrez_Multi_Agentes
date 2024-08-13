@@ -92,7 +92,7 @@ TEMPO: +/- 15min
 
 #### Lições Aprendidas e Percepções
 
-- As lições aprendindas foram a possibilidade de uso de classes em e aprendizado em Pthon que alguns membros do grupo pouco tinham, uso de SMA(Sistema Multi-Agentes) em Python, descoberta de bibliotecas novas para Xadrez, revisão de algoritmos e aprendizado de novos, uso dinâmico dos agentes para udar comportamentos a cada jogada.
+- As lições aprendindas foram a possibilidade de uso de classes em e aprendizado em Python que alguns membros do grupo pouco tinham, uso de SMA(Sistema Multi-Agentes) em Python, descoberta de bibliotecas novas para Xadrez, revisão de algoritmos e aprendizado de novos, uso dinâmico dos agentes para udar comportamentos a cada jogada.
 - Apesar de sofrer com problemas relacionados a interação entre agentes, com scheduler colocando todas as peças para se moverem ao mesmo tempo, falta de algumas ações na interface e alguns pontos para análise estátisca, apesar do mesmo possuir simulação, foi possivel concluir o projeto e até o momento a maioria dos membros puderam contribuir com o trabalho.
 
 #### Contribuições e Fragilidades
